@@ -20,4 +20,5 @@ from django.urls import path, include  # include is key!
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),   # <-- this connects your app’s URLs
+    path('files/', include('files.urls')),
 ]
