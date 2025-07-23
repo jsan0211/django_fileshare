@@ -1,10 +1,11 @@
 import subprocess
 import os
-import signal
 import sys
 import time
+import signal
 
 PID_FILE = ".django_server.pid"
+LOG_FILE = "server.log"
 
 def get_pid():
     if os.path.exists(PID_FILE):
@@ -21,15 +22,18 @@ def start_server():
         print("Server is already running.")
         return
 
-    print("Starting Django server...")
-    process = subprocess.Popen(
-        ['start', 'cmd', '/k', 'python manage.py runserver'],
-        shell=True
-    )
-    # simulate delay for startup
-    time.sleep(2)
-    print("Server started in new terminal.")
-    save_pid(process.pid)
+    print("Starting Django server in background (logging to server.log)...")
+
+    with open(LOG_FILE, "w") as log:
+        process = subprocess.Popen(
+            [os.path.join('.venv', 'Scripts', 'python.exe'), 'manage.py', 'runserver'],
+            stdout=log,
+            stderr=log,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+        )
+        time.sleep(2)
+        save_pid(process.pid)
+        print(f"Server started with PID {process.pid}.")
 
 def stop_server():
     pid = get_pid()
@@ -39,14 +43,18 @@ def stop_server():
     try:
         print(f"Stopping server with PID {pid}...")
         os.kill(pid, signal.SIGTERM)
+        time.sleep(1)
         os.remove(PID_FILE)
         print("Server stopped.")
+    except ProcessLookupError:
+        print("Process not found. Removing stale PID file.")
+        os.remove(PID_FILE)
     except Exception as e:
         print(f"Failed to stop server: {e}")
 
 def status():
     pid = get_pid()
-    if pid is None:
+    if not pid:
         print("Server is not running.")
         return
     try:

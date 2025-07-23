@@ -7,4 +7,17 @@
     {{ form.as_p }}
     <button type="submit">Upload</button>
   </form>
+
+<h3>Your uploaded files</h3>
+<ul>
+  {% for file in user_files %}
+    <li>
+      <a href="{% url 'secure_download' file.id %}">
+        {{ file.file.name|cut:"uploads/" }}
+      </a>
+    </li>
+  {% empty %}
+    <li>No files uploaded yet.</li>
+  {% endfor %}
+</ul>
 {% endblock %}

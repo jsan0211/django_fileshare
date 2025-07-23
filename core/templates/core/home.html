@@ -1,3 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+  <h1>Welcome to FileShare</h1>
+  <p>This is your homepage.</p>
+{% endblock %}
+
 <h2>Welcome {{ user.username }}</h2>
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
