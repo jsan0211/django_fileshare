@@ -8,3 +8,6 @@ db.sqlite3
 *.log
 .env
 uploads/
+project_map.txt
+.django_server.pid
+server.log
