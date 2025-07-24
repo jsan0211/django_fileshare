@@ -31,5 +31,12 @@ def profile(request):
         expires_at__lt=timezone.now()
     ).delete()
 
+    # Files uploaded by this user
     user_files = UploadedFile.objects.filter(uploaded_by=request.user)
-    return render(request, 'core/profile.html', {'user_files': user_files})
+    # Files shared with this user (exclude ones they uploaded themselves)
+    shared_files = UploadedFile.objects.filter(shared_with=request.user).exclude(uploaded_by=request.user)
+
+    return render(request, 'core/profile.html', {
+        'user_files': user_files,
+        'shared_files': shared_files,
+    })

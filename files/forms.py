@@ -1,5 +1,6 @@
 from django import forms
 from .models import UploadedFile
+from django.contrib.auth.models import User
 
 class UploadFileForm(forms.ModelForm):
     expires_in_hours = forms.IntegerField(
@@ -26,3 +27,19 @@ class UploadFileForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+class ShareFileForm(forms.Form):
+    username = forms.CharField(
+        label="Share with (username)",
+        max_length=150,
+        help_text="Enter the username of the user you want to share with."
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        # Make sure the user exists
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise forms.ValidationError("No user with that username exists.")
+        return user

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Share File: {{ file.file.name|cut:"uploads/" }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Share</button>
+    <a href="{% url 'profile' %}">Cancel</a>
+  </form>
+{% endblock %}

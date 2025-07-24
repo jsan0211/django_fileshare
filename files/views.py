@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import FileResponse, Http404
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-from .forms import UploadFileForm
-from .models import UploadedFile
 from django.utils import timezone
+from .forms import UploadFileForm
+from .forms import ShareFileForm
+from .models import UploadedFile
 from datetime import timedelta
 import os
 
@@ -57,3 +59,20 @@ def delete_file(request, file_id):
 
     # If GET, show confirmation page
     return render(request, 'files/delete_confirm.html', {'file': file})
+
+@login_required
+def share_file(request, file_id):
+    file = get_object_or_404(UploadedFile, id=file_id, uploaded_by=request.user)
+
+    if request.method == 'POST':
+        form = ShareFileForm(request.POST)
+        if form.is_valid():
+            user_to_share = form.cleaned_data['username']  # this is actually a User object
+            # Add to many-to-many field:
+            file.shared_with.add(user_to_share)
+            messages.success(request, f"File shared with {user_to_share.username}.")
+            return redirect('profile')
+    else:
+        form = ShareFileForm()
+    
+    return render(request, 'files/share_file.html', {'form': form, 'file': file})

@@ -10,6 +10,7 @@ class UploadedFile(models.Model): # defining a database table. Turns into real t
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE) # connects file to a specific user (uploader) if user deleted then delete files
     uploaded_at = models.DateTimeField(auto_now_add=True) # django autofills timestamp
     expires_at = models.DateTimeField(default=default_expiry)
+    shared_with = models.ManyToManyField(User, blank=True, related_name='shared_files')
 
 
     def __str__(self): # just for display in django admin or debug
