@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import FileResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from .forms import UploadFileForm
 from .forms import ShareFileForm
@@ -38,7 +37,8 @@ def secure_download(request, file_id):
     try:
         uploaded_file = UploadedFile.objects.get(id=file_id)
 
-        if uploaded_file.uploaded_by != request.user:
+        if (uploaded_file.uploaded_by != request.user and
+            request.user not in uploaded_file.shared_with.all()):
             raise Http404("You don't have permission to access this file.")
 
         file_path = uploaded_file.file.path
@@ -67,8 +67,19 @@ def share_file(request, file_id):
     if request.method == 'POST':
         form = ShareFileForm(request.POST)
         if form.is_valid():
-            user_to_share = form.cleaned_data['username']  # this is actually a User object
-            # Add to many-to-many field:
+            user_to_share = form.cleaned_data['username']  # This is a User object
+
+            # --- EDGE CASE 1: Prevent sharing with yourself ---
+            if user_to_share == request.user:
+                messages.error(request, "You cannot share a file with yourself.")
+                return redirect('share_file', file_id=file.id)
+
+            # --- EDGE CASE 2: Prevent duplicate sharing ---
+            if file.shared_with.filter(id=user_to_share.id).exists():
+                messages.info(request, f"File is already shared with {user_to_share.username}.")
+                return redirect('profile')
+
+            # Normal flow: add user to shared_with
             file.shared_with.add(user_to_share)
             messages.success(request, f"File shared with {user_to_share.username}.")
             return redirect('profile')

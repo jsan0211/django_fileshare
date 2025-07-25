@@ -4,6 +4,21 @@
 <h2>Welcome, {{ request.user.username }}!</h2>
 <p>This is your profile page.</p>
 
+{% if expiring_soon %}
+    <div class="alert alert-warning">
+        <strong>Heads up!</strong> The following files will expire within the next hour:
+        <ul>
+        {% for f in expiring_soon %}
+            <li>
+                {{ f.file.name|cut:"uploads/" }}
+                (expires at {{ f.expires_at|date:"Y-m-d H:i" }})
+                [<a href="{% url 'secure_download' f.id %}">Download</a>]
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
 <h3>Your Uploaded Files</h3>
 {% if user_files %}
     <ul>
