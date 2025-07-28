@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import FileResponse, Http404
+from django.views.decorators.csrf import csrf_exempt
+from django.http import FileResponse, Http404, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -87,3 +88,30 @@ def share_file(request, file_id):
         form = ShareFileForm()
     
     return render(request, 'files/share_file.html', {'form': form, 'file': file})
+
+@csrf_exempt  # We'll remove this when using CSRF token with AJAX (safer for now)
+@login_required
+def api_upload_file(request):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        uploaded_file = request.FILES.get('file')
+        hours = request.POST.get('expires_in_hours')
+        try:
+            hours = int(hours)
+        except (TypeError, ValueError):
+            hours = 3  # Default
+        if uploaded_file:
+            instance = UploadedFile.objects.create(
+                file=uploaded_file,
+                uploaded_by=request.user,
+                expires_at=timezone.now() + timedelta(hours=hours)
+            )
+            return JsonResponse({
+                'success': True,
+                'filename': instance.file.name,
+                'expires_at': instance.expires_at.strftime("%Y-%m-%d %H:%M"),
+            })
+        else:
+            return JsonResponse({'error': 'No file provided'}, status=400)
+    return JsonResponse({'error': 'Only POST allowed'}, status=405)

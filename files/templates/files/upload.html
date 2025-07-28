@@ -2,6 +2,10 @@
 
 {% block content %}
   <h2>Upload a file</h2>
+  <div id="dropzone" style="border:2px dashed #888; padding:30px; text-align:center; margin-bottom:15px;">
+    <strong>Drag and drop files here</strong> or use the button below.
+  </div>
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
